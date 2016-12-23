@@ -168,7 +168,8 @@ public:
    * Retrieve the set bits. Can be much faster than iterating through
    * the set bits with an iterator.
    */
-  std::vector<size_t> toArray() const;
+  template<typename T>
+  std::vector<T> toArray() const;
 
   /**
    * computes the logical and with another compressed bitmap
@@ -460,7 +461,7 @@ public:
    * bits in increasing order. This just calls "toArray".
    */
   std::vector<size_t> toVector() const {
-    return toArray();
+    return toArray<size_t>();
   }
 
   /**
@@ -941,8 +942,9 @@ template <class uword> size_t EWAHBoolArray<uword>::numberOfOnes() const {
 }
 
 template <class uword>
-std::vector<size_t> EWAHBoolArray<uword>::toArray() const {
-  std::vector<size_t> ans;
+template <typename T>
+std::vector<T> EWAHBoolArray<uword>::toArray() const {
+  std::vector<T> ans;
   size_t pos(0);
   size_t pointer(0);
   const size_t buffersize = buffer.size();
