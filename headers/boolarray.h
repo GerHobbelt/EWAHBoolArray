@@ -435,6 +435,18 @@ public:
     return (out << static_cast<std::string>(a));
   }
 
+  /**
+   * Swap the content of this bitmap with another bitmap.
+   * No copying is done. (Running time complexity is constant.)
+   */
+  void swap( BoolArray &o ) {
+    buffer.swap(o.buffer);
+    size_t tmp = o.sizeinbits;
+    o.sizeinbits = sizeinbits;
+    sizeinbits = tmp;
+  }
+  
+
 private:
   void clearBogusBits() {
     if ((sizeinbits % wordinbits) != 0) {

@@ -168,7 +168,7 @@ public:
    * Retrieve the set bits. Can be much faster than iterating through
    * the set bits with an iterator.
    */
-  template<typename T>
+  template<typename T = size_t>
   std::vector<T> toArray() const;
 
   /**
