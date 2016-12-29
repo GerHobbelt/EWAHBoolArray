@@ -172,6 +172,12 @@ public:
   std::vector<T> toArray() const;
 
   /**
+   * Scan bitmap and retrieve indices from it to the functor
+   */
+  template<typename Func>
+  void visit( Func &f ) const;
+
+  /**
    * computes the logical and with another compressed bitmap
    * answer goes into container
    * Running time complexity is proportional to the sum of the compressed
@@ -942,9 +948,9 @@ template <class uword> size_t EWAHBoolArray<uword>::numberOfOnes() const {
 }
 
 template <class uword>
-template <typename T>
-std::vector<T> EWAHBoolArray<uword>::toArray() const {
-  std::vector<T> ans;
+template<typename Func>
+void EWAHBoolArray<uword>::visit( Func &f ) const
+{
   size_t pos(0);
   size_t pointer(0);
   const size_t buffersize = buffer.size();
@@ -954,7 +960,7 @@ std::vector<T> EWAHBoolArray<uword>::toArray() const {
     if (rlw.getRunningBit()) {
       size_t upper_limit = pos + productofrl;
       for (; pos < upper_limit; ++pos) {
-        ans.push_back(pos);
+        f(pos);
       }
     } else {
       pos += productofrl;
@@ -966,14 +972,21 @@ std::vector<T> EWAHBoolArray<uword>::toArray() const {
       while (myword != 0) {
         uint64_t t = myword & (~myword + 1);
         uint32_t r = numberOfTrailingZeros(t);
-        ans.push_back(pos + r);
+        f(pos + r);
         myword ^= t;
       }
       pos += wordinbits;
       ++pointer;
     }
   }
-  return ans;
+}
+
+template <class uword>
+template <typename T>
+std::vector<T> EWAHBoolArray<uword>::toArray() const {
+  std::vector<T> ans;
+  auto func = [&ans](size_t pos) { ans.push_back(pos); };
+  visit(func);
 }
 
 template <class uword>
