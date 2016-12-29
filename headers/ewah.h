@@ -987,6 +987,7 @@ std::vector<T> EWAHBoolArray<uword>::toArray() const {
   std::vector<T> ans;
   auto func = [&ans](size_t pos) { ans.push_back(pos); };
   visit(func);
+  return ans;
 }
 
 template <class uword>
