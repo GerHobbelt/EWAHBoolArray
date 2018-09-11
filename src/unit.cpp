@@ -29,60 +29,104 @@ static string testfailed = "---\ntest failed.\n\n\n\n\n\n";
 #endif
 
 template <class uword> bool testInEqualityEWAHBoolArray() {
-  cout << "[testing testInEqualityEWAHBoolArray] sizeof(uword)=" << sizeof(uword) << endl;
+  cout << "[testing testInEqualityEWAHBoolArray] sizeof(uword)="
+       << sizeof(uword) << endl;
   EWAHBoolArray<uword> b1;
   EWAHBoolArray<uword> b = EWAHBoolArray<uword>::bitmapOf(3, 1, 10, 11);
   EWAHBoolArray<uword> b3 = EWAHBoolArray<uword>::bitmapOf(3, 1, 10, 11);
-  EWAHBoolArray<uword> b4 = EWAHBoolArray<uword>::bitmapOf(4, 1, 10,  11, 10000);
+  EWAHBoolArray<uword> b4 = EWAHBoolArray<uword>::bitmapOf(4, 1, 10, 11, 10000);
 
-  if(b3 != b)  {
+  if (b3 != b) {
     cout << "should be equal!" << endl;
     return false;
   }
-  if(b == b1) {
+  if (b == b1) {
     cout << "should be different!" << endl;
     return false;
   }
-  if(b4 == b1) {
+  if (b4 == b1) {
     cout << "should be different!" << endl;
     return false;
   }
-  if(b4 == b3) {
+  if (b4 == b3) {
     cout << "should be different!" << endl;
     return false;
   }
   return true;
 }
+template <class uword> bool testEmpty() {
+  cout << "[testing SizeInBits] sizeof(uword)=" << sizeof(uword) << endl;
+    EWAHBoolArray<uword> ewah0;
+    if(!ewah0.empty()) {
+      std::cout << "empty is buggy " << std::endl;
+      return false;
+    }
+    EWAHBoolArray<uword> ewah1 = EWAHBoolArray<uword>::bitmapOf(1, 1);
+    if(ewah1.empty()) {
+      std::cout << "empty is buggy " << std::endl;
+      return false;
+    }
+    return true;
+}
+template <class uword> bool testSizeInBits() {
+  cout << "[testing SizeInBits] sizeof(uword)=" << sizeof(uword) << endl;
+
+    EWAHBoolArray<uword> ewah1 = EWAHBoolArray<uword>::bitmapOf(1, 1);
+    EWAHBoolArray<uword> ewah2 = EWAHBoolArray<uword>::bitmapOf(1, 2);
+    EWAHBoolArray<uword> ewah3 = EWAHBoolArray<uword>::bitmapOf(1, 3);
+    EWAHBoolArray<uword> ewah4 = EWAHBoolArray<uword>::bitmapOf(1, 4);
+    EWAHBoolArray<uword> result1 = ewah1 | ewah2 | ewah3 | ewah4;
+    EWAHBoolArray<uword> result12 = ewah1 & ewah2 & ewah3 & ewah4;
+    EWAHBoolArray<uword> result13 = ewah1 ^ ewah2 ^ ewah3 ^ ewah4;
+
+    EWAHBoolArray<uword> result2 = EWAHBoolArray<uword>::bitmapOf(4, 1, 2, 3, 4);
+    if(result1 != result2) {
+      cout << testfailed << endl;
+      std::cout << "should be equal " << std::endl;
+      return false;
+    }
+    if((result1.sizeInBits() != result2.sizeInBits()) || (result12.sizeInBits() != result2.sizeInBits()) || (result13.sizeInBits() != result2.sizeInBits())) {
+      cout << testfailed << endl;
+      std::cout << "bad sizeInBits " << std::endl;
+      return false;
+    }
+    return true;
+}
 
 template <class uword> bool testSerialSize() {
-  cout << "[testing SerialSize] sizeof(uword)=" << sizeof(uword)
-       << endl;
+  cout << "[testing SerialSize] sizeof(uword)=" << sizeof(uword) << endl;
   size_t bitval = 55555;
-  EWAHBoolArray<uword> b = EWAHBoolArray<uword>::bitmapOf(1, bitval);// set just one bit
+  EWAHBoolArray<uword> b =
+      EWAHBoolArray<uword>::bitmapOf(1, bitval); // set just one bit
   // generic write method in EWAHBoolArray can be wasteful for single bits...
   stringstream ss;
   b.write(ss);
   size_t compressedsize = ss.tellp();
   const size_t wordinbits = sizeof(uword) * CHAR_BIT;
   size_t offset = (bitval + wordinbits) / wordinbits - 1;
-  offset = (offset + RunningLengthWord<uword>::largestrunninglengthcount - 1) / RunningLengthWord<uword>::largestrunninglengthcount;
-  size_t expectedsize = 2 * sizeof(size_t) +  sizeof(uword) + offset  * sizeof(uword);
+  offset = (offset + RunningLengthWord<uword>::largestrunninglengthcount - 1) /
+           RunningLengthWord<uword>::largestrunninglengthcount;
+  size_t expectedsize =
+      2 * sizeof(size_t) + sizeof(uword) + offset * sizeof(uword);
   cout << "using " << compressedsize << " bytes " << endl;
-  if( compressedsize != expectedsize) {
-    cout << "bad size, was expected  " << expectedsize << " got " << compressedsize  << endl;
+  if (compressedsize != expectedsize) {
+    cout << "bad size, was expected  " << expectedsize << " got "
+         << compressedsize << endl;
     return false; // unexpected size
   }
   ss.str("");
   ss.clear();
   //
-  uint32_t buffersize = (uint32_t) b.bufferSize();// I am going to use only 32-bit
+  uint32_t buffersize =
+      (uint32_t)b.bufferSize(); // I am going to use only 32-bit
   ss.write(reinterpret_cast<const char *>(&buffersize), sizeof(uint32_t));
   b.writeBuffer(ss);
   compressedsize = ss.tellp();
-  expectedsize = sizeof(uint32_t) +  sizeof(uword)  + offset  * sizeof(uword);
+  expectedsize = sizeof(uint32_t) + sizeof(uword) + offset * sizeof(uword);
   cout << "using " << compressedsize << " bytes with custom format" << endl;
-  if( compressedsize != expectedsize) {
-    cout << "bad size, was expected  " << expectedsize << " got " << compressedsize  << endl;
+  if (compressedsize != expectedsize) {
+    cout << "bad size, was expected  " << expectedsize << " got "
+         << compressedsize << endl;
     return false; // unexpected size
   }
   return true;
@@ -183,15 +227,64 @@ template <class uword> bool testCardinalityEWAHBoolArray() {
   return true;
 }
 
+template <class uword> bool testLargeDirty() {
+  cout << "[testing LargeDirty] sizeof(uword)=" << sizeof(uword) << endl;
+  size_t N = 200000000;
+  vector<uint32_t> bigarray1(N);
+  vector<uint32_t> bigarray2(N);
+  for (size_t k = 0; k < N; k++) {
+    bigarray1[k] = (uint32_t)(8 * k);
+    bigarray2[k] = (uint32_t)(32 * k);
+  }
+  EWAHBoolArray<uword> b1 = EWAHBoolArray<uword>();
+  EWAHBoolArray<uword> b2 = EWAHBoolArray<uword>();
+  for (size_t k = 0; (8 * k) < N; k++) {
+    b1.set(8 * k);
+  }
+  for (size_t k = 0; (64 * k) < N; k++) {
+    b1.set(64 * k);
+  }
+
+  EWAHBoolArray<uword> b3 = EWAHBoolArray<uword>::bitmapOf(3, 1, 10, 1001);
+  EWAHBoolArray<uword> b4 = EWAHBoolArray<uword>::bitmapOf(3, 1, 10, 1001);
+
+  if (b3.numberOfOnes() != 3) {
+    std::cout << "bad b3 count" << b4.numberOfOnes() << std::endl;
+    return false;
+  }
+  b3 = b3 | b1;
+  b4 = b4 | b2;
+  b3 = b3 | b2;
+  b4 = b4 | b1;
+  if (b3 != b4) {
+    std::cout << "b3 != b4" << std::endl;
+    return false;
+  }
+  b4 = b4 - b1;
+  if (b4.numberOfOnes() != 3) {
+    std::cout << "bad b4 count" << b4.numberOfOnes() << std::endl;
+    return false;
+  }
+  b3 = b3 ^ b4;
+  if (b3 != b1) {
+    std::cout << "b3 != b1" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 template <class uword> bool testAndNotEWAHBoolArray() {
-  cout << "[testing AndNotEWAHBoolArray] sizeof(uword)=" << sizeof(uword) << endl;
-  EWAHBoolArray<uword> b1 = EWAHBoolArray<uword>::bitmapOf(1,1);
-  EWAHBoolArray<uword> b = EWAHBoolArray<uword>::bitmapOf(2,1,100);
+  cout << "[testing AndNotEWAHBoolArray] sizeof(uword)=" << sizeof(uword)
+       << endl;
+  EWAHBoolArray<uword> b1 = EWAHBoolArray<uword>::bitmapOf(1, 1);
+  EWAHBoolArray<uword> b = EWAHBoolArray<uword>::bitmapOf(2, 1, 100);
   EWAHBoolArray<uword> bout;
-  b.logicalandnot(b1,bout);
-  cout<<bout<<endl;
+  b.logicalandnot(b1, bout);
+  cout << bout << endl;
   if (bout.numberOfOnes() != 1) {
-      return false;
+    cout << "expected answer : 1 " << endl;
+    return false;
   }
   return true;
 }
@@ -415,6 +508,33 @@ template <class uword> bool testJoergBukowski() {
   positions.push_back(164599);
   string indexfile("testingewahboolarray.bin");
   ::remove(indexfile.c_str());
+  EWAHBoolArray<uword> mytestarray;
+  for (vector<uint32_t>::const_iterator i = positions.begin();
+       i != positions.end(); ++i) {
+    mytestarray.set(*i);
+  }
+  size_t count = 0;
+  for (typename EWAHBoolArray<uword>::const_iterator j = mytestarray.begin();
+       j != mytestarray.end(); ++j) {
+    if (count >= positions.size()) {
+      std::cout << " Should be done by now!" << std::endl;
+      isOk = false;
+      assert(false);
+      break;
+    }
+    if (*j != positions[count]) {
+      isOk = false;
+      std::cout << " Expected " << positions[count] << std::endl;
+      break;
+    }
+    count++;
+  }
+  if (count < positions.size()) {
+    std::cout << "counted " << count << " values but expected "
+              << positions.size() << std::endl;
+    isOk = false;
+  }
+  assert(count == positions.size());
   EWAHBoolArray<uword> myarray;
   for (vector<uint32_t>::const_iterator i = positions.begin();
        i != positions.end(); ++i) {
@@ -438,8 +558,9 @@ template <class uword> bool testJoergBukowski() {
     }
     vals.clear();
     for (typename EWAHBoolArray<uword>::const_iterator j = recovered.begin();
-         j != recovered.end(); ++j)
+         j != recovered.end(); ++j) {
       vals.push_back(static_cast<uint32_t>(*j));
+    }
     if (vals.size() != static_cast<size_t>(i - positions.begin() + 1)) {
       cout << "failed to recover right number -- iterator" << endl;
       isOk = false;
@@ -669,7 +790,7 @@ template <class uword> bool testSTLCompatibility() {
   bitset1.set(2);
   bitset1.set(1000);
   bitset1.set(1001);
-  vector<EWAHBoolArray<uword>> testVec(1);
+  vector<EWAHBoolArray<uword> > testVec(1);
   testVec[0].set(1);
   testVec[0].set(2);
   testVec[0].set(1000);
@@ -814,9 +935,45 @@ template <class uword> bool testSerialization() {
   stringstream ss;
   EWAHBoolArray<uword> lmyarray;
   for (int k = 0; k < 10; ++k) {
-    bitmap.write(ss);
+    size_t w1 = bitmap.write(ss);
+    if (w1 != bitmap.sizeOnDisk()) {
+      return false;
+    }
+    size_t w2 = lmyarray.read(ss);
+    if (w2 != bitmap.sizeOnDisk()) {
+      return false;
+    }
+    if (lmyarray != bitmap) {
+      return false;
+    }
+    typename EWAHBoolArray<uword>::const_iterator i = bitmap.begin();
+    typename EWAHBoolArray<uword>::const_iterator j = lmyarray.begin();
+    for (; i != bitmap.end(); ++i, ++j) {
+      if (*i != *j)
+        return false;
+    }
+  }
+  return true;
+}
 
-    lmyarray.read(ss);
+template <class uword> bool testRawSerialization() {
+  cout << "[testing Raw Serialization] word size = " << sizeof(uword) << endl;
+  EWAHBoolArray<uword> bitmap;
+  for (int i = 0; i < 1 << 31; i = 2 * i + 3) {
+    bitmap.set(static_cast<size_t>(i));
+  }
+  vector<char> buffer(bitmap.sizeOnDisk());
+  stringstream ss;
+  EWAHBoolArray<uword> lmyarray;
+  for (int k = 0; k < 10; ++k) {
+    size_t w1 = bitmap.write(buffer.data(), buffer.size());
+    if (w1 != bitmap.sizeOnDisk()) {
+      return false;
+    }
+    size_t w2 = lmyarray.read(buffer.data(), buffer.size());
+    if (w2 != bitmap.sizeOnDisk()) {
+      return false;
+    }
     if (lmyarray != bitmap) {
       return false;
     }
@@ -1052,7 +1209,7 @@ bool testRealData() {
     return true;
   }
   const size_t N = 207;
-  vector<size_t> v1, v2, va, vor, vxor;
+  vector<size_t> v1, v2, va, vor, vxor, vand;
   EWAHBoolArray<uint64_t> container;
 
   for (size_t k = 0; k < 207; ++k) {
@@ -1068,8 +1225,16 @@ bool testRealData() {
     EWAHBoolArray<uint64_t> **ewahs = JavaEWAHReader::readFile(filename);
     ewahs[0]->appendSetBits(v1);
     ewahs[1]->appendSetBits(v2);
-    if(ewahs[0] == ewahs[1]) {
+    if (ewahs[0] == ewahs[1]) {
       cerr << "successive bitmaps shouldn't be equal" << endl;
+      return false;
+    }
+    size_t c1 = 0;
+    for (auto i = ewahs[0]->begin(); i != ewahs[0]->end(); ++i)
+      c1++;
+    if (c1 != v1.size()) {
+      cout << "Loading bitmaps from file " << filename << endl;
+      cerr << "bad iterator size at vec 1" << endl;
       return false;
     }
     if (ewahs[0]->numberOfOnes() != v1.size()) {
@@ -1077,12 +1242,25 @@ bool testRealData() {
       cerr << "bad size at vec 1" << endl;
       return false;
     }
+    size_t c2 = 0;
+    for (auto i = ewahs[1]->begin(); i != ewahs[1]->end(); ++i)
+      c2++;
+    if (c2 != v2.size()) {
+      cout << "Loading bitmaps from file " << filename << endl;
+      cerr << "bad iterator size at vec 2" << endl;
+      return false;
+    }
     if (ewahs[1]->numberOfOnes() != v2.size()) {
       cout << "Loading bitmaps from file " << filename << endl;
       cerr << "bad size at vec 2" << endl;
       return false;
     }
+    size_t predictedintersection = ewahs[0]->logicalandcount(*ewahs[1]);
     ewahs[0]->logicaland(*ewahs[1], container);
+    if (container.numberOfOnes() != predictedintersection) {
+      cerr << "bad logicalandcount" << endl;
+      return false;
+    }
     container.appendSetBits(va);
     if (container.numberOfOnes() != va.size()) {
       cout << "Loading bitmaps from file " << filename << endl;
@@ -1102,8 +1280,12 @@ bool testRealData() {
     }
 
     container.reset();
-
+    size_t predictedunion = ewahs[0]->logicalorcount(*ewahs[1]);
     ewahs[0]->logicalor(*ewahs[1], container);
+    if (container.numberOfOnes() != predictedunion) {
+      cerr << "bad logicalorcount" << endl;
+      return false;
+    }
     container.appendSetBits(vor);
     if (container.numberOfOnes() != vor.size()) {
       cout << "Loading bitmaps from file " << filename << endl;
@@ -1118,7 +1300,8 @@ bool testRealData() {
     if (longunion != vor) {
       cout << "Loading bitmaps from file " << filename << endl;
       cerr << "unions do not match!" << endl;
-      cerr << "They have lengths " <<longunion.size() << " and "<< vor.size() << endl;
+      cerr << "They have lengths " << longunion.size() << " and " << vor.size()
+           << endl;
 
       return false;
     }
@@ -1126,6 +1309,13 @@ bool testRealData() {
     container.reset();
 
     ewahs[0]->logicalxor(*ewahs[1], container);
+    size_t predictedxor = ewahs[0]->logicalxorcount(*ewahs[1]);
+    if (container.numberOfOnes() != predictedxor) {
+      cerr << "bad logicalxorcount" << container.numberOfOnes() << " "
+           << predictedxor << endl;
+      return false;
+    }
+
     container.appendSetBits(vxor);
     if (container.numberOfOnes() != vxor.size()) {
       cout << "Loading bitmaps from file " << filename << endl;
@@ -1143,6 +1333,26 @@ bool testRealData() {
       cerr << "xor do not match!" << endl;
       return false;
     }
+
+    EWAHBoolArray<uint64_t> tmpcontainer;
+
+    ewahs[0]->logicalxor(*ewahs[1], tmpcontainer);
+    EWAHBoolArray<uint64_t> createdandnotcontainer;
+    ewahs[0]->logicaland(tmpcontainer, createdandnotcontainer);
+    EWAHBoolArray<uint64_t> directandnotcontainer;
+    ewahs[0]->logicalandnot(*ewahs[1], directandnotcontainer);
+
+    if (directandnotcontainer != createdandnotcontainer) {
+      cout << "Loading bitmaps from file " << filename << endl;
+      cerr << "andnot do not match!" << endl;
+      return false;
+    }
+    size_t predictedandnot = ewahs[0]->logicalandnotcount(*ewahs[1]);
+    if (directandnotcontainer.numberOfOnes() != predictedandnot) {
+      cerr << "bad logicalandnotcount" << endl;
+      return false;
+    }
+
     delete ewahs[0];
     delete ewahs[1];
     delete[] ewahs;
@@ -1190,8 +1400,8 @@ template <class uword> bool dataindexingtest() {
     }
   }
 
-  map<string, EWAHBoolArray<uword>> index1;
-  map<string, EWAHBoolArray<uword>> index2;
+  map<string, EWAHBoolArray<uword> > index1;
+  map<string, EWAHBoolArray<uword> > index2;
 
   for (size_t i = 0; i < col1.size(); i++) {
     index1[col1[i]].set(i);
@@ -1202,10 +1412,10 @@ template <class uword> bool dataindexingtest() {
 
   size_t testcount = 0;
 
-  for (typename map<string, EWAHBoolArray<uword>>::iterator i = index1.begin();
+  for (typename map<string, EWAHBoolArray<uword> >::iterator i = index1.begin();
        i != index1.end(); ++i) {
     EWAHBoolArray<uword> &bitmap1 = i->second;
-    for (typename map<string, EWAHBoolArray<uword>>::iterator j =
+    for (typename map<string, EWAHBoolArray<uword> >::iterator j =
              index2.begin();
          j != index2.end(); ++j) {
       EWAHBoolArray<uword> &bitmap2 = j->second;
@@ -1258,12 +1468,174 @@ bool funnytest() {
 template <class uword> bool arrayinit() {
   cout << "[arrayinit] checking arrayinit...sizeof(uword)=" << sizeof(uword)
        << endl;
-  EWAHBoolArray<uint32_t> gpr[10];
+  EWAHBoolArray<uword> gpr[10];
   for (int k = 0; k < 10; ++k)
     gpr[k].set(k);
   for (int k = 0; k < 10; ++k)
     cout << gpr[k] << endl;
   cout << "Your code is probably ok. " << endl;
+  return true;
+}
+
+template <class uword> bool countstest1() {
+  size_t data1[] = {24,   5068, 5113, 5144, 5212, 5281, 5301, 5435, 5498, 5547,
+                    5568, 5748, 6010, 6079, 6151, 6245, 6365, 6533, 6566, 6809,
+                    6813, 6904, 7046, 7184, 7258, 7302, 7307, 7382, 7424, 7425,
+                    7476, 7518, 7609, 7697, 7776, 7809, 7837, 7889, 7898, 7933,
+                    8029, 8091, 8279, 8328, 8372, 8391, 8456, 8601, 8612, 8628,
+                    8635, 8869, 8886, 8937, 9059, 9067};
+  size_t data2[] = {
+      0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,
+      15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
+      30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
+      45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  59,  60,
+      61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,
+      76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,
+      91,  92,  93,  94,  95,  96,  97,  98,  99,  100, 101, 102, 103, 104, 105,
+      106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
+      121, 122, 123, 124, 125, 126, 127, 128};
+  EWAHBoolArray<uword> b1;
+  for (size_t k = 0; k < sizeof(data1) / sizeof(size_t); ++k)
+    b1.set(data1[k]);
+  EWAHBoolArray<uword> b2;
+  for (size_t k = 0; k < sizeof(data2) / sizeof(size_t); ++k)
+    b2.set(data2[k]);
+  assert(b1.logicalandcount(b2) == b1.logicaland(b2).numberOfOnes());
+  assert(b1.logicalorcount(b2) == b1.logicalor(b2).numberOfOnes());
+  assert(b1.logicalxorcount(b2) == b1.logicalxor(b2).numberOfOnes());
+  assert(b1.logicalandnotcount(b2) == b1.logicalandnot(b2).numberOfOnes());
+  return true;
+}
+
+template <class uword> bool countstest2() {
+  size_t data1[] = {
+      193,   261,   738,   1484,  1641,  1703,  1858,  2445,  3183,  3385,
+      3406,  4028,  4139,  4369,  6267,  6692,  6720,  6818,  7165,  8388,
+      8879,  8898,  9866,  10362, 10465, 11578, 11793, 11871, 12334, 12604,
+      12814, 13604, 14287, 14699, 14771, 14797, 15041, 15298, 16649, 17620,
+      17712, 18215, 18576, 18689, 18929, 18971, 19326, 19387, 19397, 20478,
+      20559, 20590, 20749, 21072, 21830, 21937, 22374, 22547, 23552, 23630,
+      23727, 23798, 23862, 24770, 25031, 25037, 25669, 25938, 26877, 27972,
+      28392, 29049, 29170, 29429, 30019, 30504, 30606, 30854, 31325, 31360,
+      31671, 31960, 31984, 32196, 32483, 32935, 33010, 33163, 33341, 33669,
+      33822, 34243, 35003, 35334, 36401, 37430, 37472, 37752, 38012, 38374,
+      38560, 38814, 39011, 39014, 39846, 40441, 40465, 40911, 41103, 41915,
+      42507, 42942, 43083, 43218, 43748, 44102, 44560, 44607, 45404, 45583,
+      45587, 46307, 46728, 47239, 47793, 47799, 47913, 48391};
+  size_t data2[] = {
+      58,    162,   321,   326,   348,   351,   361,   411,   502,   605,
+      656,   675,   765,   1036,  1087,  1213,  1321,  1577,  1818,  1957,
+      2022,  2290,  2297,  2384,  2397,  2473,  2752,  2805,  2855,  2896,
+      2961,  3646,  3721,  3866,  3931,  4000,  4121,  4199,  4594,  4634,
+      4697,  4799,  4876,  5098,  5319,  5454,  5610,  5664,  5851,  5873,
+      5892,  5986,  6075,  6127,  6270,  6289,  6337,  6354,  6446,  6571,
+      6817,  6842,  6882,  7394,  7398,  7539,  7677,  7841,  7982,  8106,
+      8475,  8749,  8769,  8793,  8926,  9015,  9133,  9175,  9207,  9373,
+      9511,  9663,  9726,  9848,  10154, 10290, 10614, 10675, 10681, 10798,
+      10868, 11302, 11367, 11396, 11405, 11562, 11626, 11633, 11644, 11721,
+      11846, 11885, 12322, 12519, 12555, 12591, 12594, 12606, 12618, 12667,
+      12752, 12820, 13139, 13175, 13252, 13410, 13431, 13534, 13695, 13883,
+      13982, 14080, 14117, 14142, 14172, 14275, 14362, 14505};
+  EWAHBoolArray<uword> b1;
+  for (size_t k = 0; k < sizeof(data1) / sizeof(size_t); ++k)
+    b1.set(data1[k]);
+  EWAHBoolArray<uword> b2;
+  for (size_t k = 0; k < sizeof(data2) / sizeof(size_t); ++k)
+    b2.set(data2[k]);
+  assert(b1.logicalandcount(b2) == b1.logicaland(b2).numberOfOnes());
+  assert(b1.logicalorcount(b2) == b1.logicalor(b2).numberOfOnes());
+  assert(b1.logicalxorcount(b2) == b1.logicalxor(b2).numberOfOnes());
+  assert(b1.logicalandnotcount(b2) == b1.logicalandnot(b2).numberOfOnes());
+  assert(b2.logicalandnotcount(b1) == b2.logicalandnot(b1).numberOfOnes());
+  return true;
+}
+
+template <class uword> bool countstest3() {
+  size_t data1[] = {
+      0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,
+      15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
+      30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
+      45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  59,  60,
+      61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,
+      76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,
+      91,  92,  93,  94,  95,  96,  97,  98,  99,  100, 101, 102, 103, 104, 105,
+      106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
+      121, 122, 123, 124, 125, 126, 127, 128};
+  size_t data2[] = {
+      31,    141,   468,   692,   2000,  2650,  2715,  2995,  3149,  3337,
+      3454,  3465,  3848,  3900,  4215,  4388,  4545,  4801,  4911,  4918,
+      5358,  6020,  6114,  6143,  6659,  7031,  7258,  7631,  8300,  9299,
+      9416,  9471,  9506,  9541,  9918,  10488, 10616, 10617, 10764, 11199,
+      11343, 11439, 11455, 11504, 11761, 11901, 12409, 12543, 12619, 12643,
+      12972, 13488, 13858, 14073, 14185, 14270, 14508, 14994, 15264, 15492,
+      15497, 15536, 15616, 15897, 15918, 16130, 16498, 16573, 16814, 16832,
+      17050, 17426, 17443, 17626, 17949, 18122, 18377, 18754, 18810, 18870,
+      18965, 19110, 19242, 19449, 19870, 19966, 20012, 20068, 20301, 20602,
+      20854, 21328, 22134, 22362, 22370, 22489, 23324, 23353, 24363, 24689,
+      24758, 24969, 25104, 25592, 25855, 26111, 26156, 26268, 26372, 26406,
+      26537, 26703, 26999, 27113, 27116, 28218, 28256, 28282, 28552, 28625,
+      28679, 28907, 29064, 29303, 29320, 29362, 29388, 29407};
+  EWAHBoolArray<uword> b1;
+  for (size_t k = 0; k < sizeof(data1) / sizeof(size_t); ++k)
+    b1.set(data1[k]);
+  EWAHBoolArray<uword> b2;
+  for (size_t k = 0; k < sizeof(data2) / sizeof(size_t); ++k)
+    b2.set(data2[k]);
+  assert(b1.logicalandcount(b2) == b1.logicaland(b2).numberOfOnes());
+  assert(b1.logicalorcount(b2) == b1.logicalor(b2).numberOfOnes());
+  assert(b1.logicalxorcount(b2) == b1.logicalxor(b2).numberOfOnes());
+  assert(b1.logicalandnotcount(b2) == b1.logicalandnot(b2).numberOfOnes());
+  assert(b2.logicalandnotcount(b1) == b2.logicalandnot(b1).numberOfOnes());
+  return true;
+}
+
+template <class uword> bool countstest4() {
+  size_t data1[] = {
+      941063, 941064, 941065, 941066, 941067, 941068, 941069, 941070, 941071,
+      941072, 941073, 941074, 941075, 941076, 941077, 941078, 941079, 941080,
+      941081, 941082, 941083, 941084, 941085, 941086, 941087, 941088, 941089,
+      941090, 941091, 941092, 941093, 941094, 941095, 941096, 941097, 941098,
+      941099, 941100, 941101, 941102, 941103, 941104, 941105, 941106, 941107,
+      941108, 941109, 941110, 941111, 941112, 941113, 941114, 941115, 941116,
+      941117, 941118, 941119, 941120, 941121, 941122, 941123, 941124, 941125,
+      941126, 941127, 941128, 941129, 941130, 941131, 941132, 941133, 941134,
+      941135, 941136, 941137, 941138, 941139, 941140, 941141, 941142, 941143,
+      941144, 941145, 941146, 941147, 941148, 941149, 941150, 941151, 941152,
+      941153, 941154, 941155, 941156, 941157, 941158, 941159, 941160, 941161,
+      941162, 941163, 941164, 941165, 941166, 941167, 941168, 941169, 941170,
+      941171, 941172, 941173, 941174, 941175, 941176, 941177, 941178, 941179,
+      941180, 941181, 941182, 941183, 941184, 941185, 941186, 941187, 941188,
+      941189, 941190, 941191, 941192, 941193, 941194, 941195, 941196, 941197,
+      941198, 941199, 941200, 941201, 941202, 941203, 941204, 941205, 941206,
+      941207, 941208, 941209, 941210, 941211, 941212, 941213, 941214, 941215,
+      941216, 941217, 941218, 941219, 941220, 941221, 941222, 941223, 941224,
+      941225, 941226, 941227, 941228, 941229, 941230, 941231, 941232, 941233,
+      941234, 941235, 941236, 941237, 941238, 941239, 941240, 941241, 941242,
+      941243, 941244, 941245, 941246, 941247, 941248, 941249, 941250, 941251,
+      941252, 941253, 941254, 941255, 941256, 941257, 941258, 941259, 941260,
+      941261, 941262, 941263, 941264, 941265, 941266, 941267, 941268, 941269,
+      941270, 941271, 941272, 941273, 941274, 941275, 941276, 941277, 941278,
+      941279, 941280, 941281, 941282, 941283, 941284, 941285, 941286, 941287,
+      941288, 941289, 941290, 941291, 941292, 941293, 941294, 941295, 941296,
+      941297, 941298, 941299, 941300, 941301, 941302, 941303, 941304, 941305,
+      941306, 941307, 941308, 941309, 941310, 941311, 941312, 941313, 941314,
+      941315, 941316, 941317, 941318};
+  size_t data2[] = {34850,  43256,  52417,  61592,  70411,  78960,
+                    88376,  216599, 225662, 234391, 251420, 258995,
+                    312661, 374271, 434864, 444105, 484562, 506410,
+                    534808, 540927, 548993, 626059, 669574, 695383,
+                    704422, 711412, 719407, 759742, 941141};
+  EWAHBoolArray<uword> b1;
+  for (size_t k = 0; k < sizeof(data1) / sizeof(size_t); ++k)
+    b1.set(data1[k]);
+  EWAHBoolArray<uword> b2;
+  for (size_t k = 0; k < sizeof(data2) / sizeof(size_t); ++k)
+    b2.set(data2[k]);
+  assert(b1.logicalandcount(b2) == b1.logicaland(b2).numberOfOnes());
+  assert(b1.logicalorcount(b2) == b1.logicalor(b2).numberOfOnes());
+  assert(b1.logicalxorcount(b2) == b1.logicalxor(b2).numberOfOnes());
+  assert(b1.logicalandnotcount(b2) == b1.logicalandnot(b2).numberOfOnes());
+  assert(b2.logicalandnotcount(b1) == b2.logicalandnot(b1).numberOfOnes());
   return true;
 }
 
@@ -1283,181 +1655,429 @@ template <class uword> bool arrayinit2d() {
 
 int main(void) {
   int failures = 0;
+  std::string failtext = "[GOT FAILURE] ";
   if (!funnytest()) {
     ++failures;
   }
+  if (!testEmpty<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testEmpty<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testSizeInBits<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testSizeInBits<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testSizeInBits<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
 
-  if (!testSerialSize<uint16_t>())
+  if (!testLargeDirty<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testSerialSize<uint32_t>())
+  }
+  if (!testLargeDirty<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testSerialSize<uint64_t>())
+  }
+  if (!testLargeDirty<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!testInEqualityEWAHBoolArray<uint16_t>())
+  if (!countstest4<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testInEqualityEWAHBoolArray<uint32_t>())
+  }
+  if (!countstest4<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testInEqualityEWAHBoolArray<uint64_t>())
+  }
+  if (!countstest4<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
+  if (!countstest3<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest3<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest3<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest1<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest1<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest1<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest2<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest2<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!countstest3<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
 
-  if (!testFastOrAggregate<uint16_t>())
+  if (!testSerialSize<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testFastOrAggregate<uint32_t>())
+  }
+  if (!testSerialSize<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testFastOrAggregate<uint64_t>())
+  }
+  if (!testSerialSize<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!arrayinit<uint16_t>())
+  if (!testInEqualityEWAHBoolArray<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!arrayinit<uint32_t>())
+  }
+  if (!testInEqualityEWAHBoolArray<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!arrayinit<uint64_t>())
+  }
+  if (!testInEqualityEWAHBoolArray<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!arrayinit2d<uint16_t>())
-    ++failures;
-  if (!arrayinit2d<uint32_t>())
-    ++failures;
-  if (!arrayinit2d<uint64_t>())
-    ++failures;
+  }
 
-  if (!dataindexingtest<uint16_t>())
+  if (!testFastOrAggregate<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!dataindexingtest<uint32_t>())
+  }
+  if (!testFastOrAggregate<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!dataindexingtest<uint64_t>())
+  }
+  if (!testFastOrAggregate<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!testRealData())
+  if (!arrayinit<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
+  if (!arrayinit<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!arrayinit<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!arrayinit2d<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!arrayinit2d<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!arrayinit2d<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+ }
+  if (!dataindexingtest<uint16_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!dataindexingtest<uint32_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!dataindexingtest<uint64_t>()) {
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
 
-  if (!testIntersects<uint16_t>())
+  if (!testRealData()) {
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testIntersects<uint32_t>())
-    ++failures;
-  if (!testIntersects<uint64_t>())
-    ++failures;
-  if (!testNanJiang<uint16_t>())
-    ++failures;
-  if (!testNanJiang<uint32_t>())
-    ++failures;
-  if (!testNanJiang<uint64_t>())
-    ++failures;
-  if (!testCardinalityEWAHBoolArray<uint16_t>())
-    ++failures;
-  if (!testCardinalityEWAHBoolArray<uint32_t>())
-    ++failures;
-  if (!testCardinalityEWAHBoolArray<uint64_t>())
-    ++failures;
-  if (!testAndNotEWAHBoolArray<uint16_t>())
-    ++failures;
-  if (!testAndNotEWAHBoolArray<uint32_t>())
-    ++failures;
-  if (!testAndNotEWAHBoolArray<uint64_t>())
-    ++failures;
-  if (!testCardinalityBoolArray<uint16_t>())
-    ++failures;
-  if (!testCardinalityBoolArray<uint32_t>())
-    ++failures;
-  if (!testCardinalityBoolArray<uint64_t>())
-    ++failures;
-  if (!testAndNotBoolArray<uint16_t>())
-    ++failures;
-  if (!testAndNotBoolArray<uint32_t>())
-    ++failures;
-  if (!testAndNotBoolArray<uint64_t>())
-    ++failures;
-  if (!testSerialization<uint16_t>())
-    ++failures;
-  if (!testSerialization<uint32_t>())
-    ++failures;
-  if (!testSerialization<uint64_t>())
-    ++failures;
+  }
 
-  if (!testGet<uint16_t>())
+  if (!testIntersects<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testGet<uint32_t>())
+  }
+  if (!testIntersects<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testGet<uint64_t>())
+  }
+  if (!testIntersects<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
+  if (!testNanJiang<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testNanJiang<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testNanJiang<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testCardinalityEWAHBoolArray<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testCardinalityEWAHBoolArray<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testCardinalityEWAHBoolArray<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testAndNotEWAHBoolArray<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testAndNotEWAHBoolArray<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testAndNotEWAHBoolArray<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testCardinalityBoolArray<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testCardinalityBoolArray<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testCardinalityBoolArray<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testAndNotBoolArray<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testAndNotBoolArray<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testAndNotBoolArray<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testSerialization<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testSerialization<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testSerialization<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testRawSerialization<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testRawSerialization<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testRawSerialization<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
 
-  if (!testLucaDeri<uint16_t>())
+  if (!testGet<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testLucaDeri<uint32_t>())
+  }
+  if (!testGet<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testLucaDeri<uint64_t>())
+  }
+  if (!testGet<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!testSetGet<uint16_t>())
+  if (!testLucaDeri<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testSetGet<uint32_t>())
+  }
+  if (!testLucaDeri<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testSetGet<uint64_t>())
+  }
+  if (!testLucaDeri<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!testPhongTran())
+  if (!testSetGet<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
+  if (!testSetGet<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testSetGet<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
 
-  if (!testSTLCompatibility<uint16_t>())
+  if (!testPhongTran()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testSTLCompatibility<uint32_t>())
-    ++failures;
-  if (!testSTLCompatibility<uint64_t>())
-    ++failures;
+  }
 
-  if (!testHemeury<uint16_t>())
+  if (!testSTLCompatibility<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testHemeury<uint32_t>())
+  }
+  if (!testSTLCompatibility<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testHemeury<uint64_t>())
+  }
+  if (!testSTLCompatibility<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!testPhongTran2<uint16_t>())
+  if (!testHemeury<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testPhongTran2<uint32_t>())
+  }
+  if (!testHemeury<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testPhongTran2<uint64_t>())
+  }
+  if (!testHemeury<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testRunningLengthWord<uint16_t>())
-    ++failures;
-  if (!testRunningLengthWord<uint32_t>())
-    ++failures;
-  if (!testRunningLengthWord<uint64_t>())
-    ++failures;
-  if (!testEWAHBoolArray<uint16_t>())
-    ++failures;
-  if (!testEWAHBoolArray<uint32_t>())
-    ++failures;
-  if (!testEWAHBoolArray<uint64_t>())
-    ++failures;
+  }
 
-  if (!testEWAHBoolArrayLogical<uint16_t>())
+  if (!testPhongTran2<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testEWAHBoolArrayLogical<uint32_t>())
+  }
+  if (!testPhongTran2<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testEWAHBoolArrayLogical<uint64_t>())
+  }
+  if (!testPhongTran2<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
+  if (!testRunningLengthWord<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testRunningLengthWord<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testRunningLengthWord<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testEWAHBoolArray<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testEWAHBoolArray<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testEWAHBoolArray<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
 
-  if (!testEWAHBoolArrayLogical2<uint16_t>())
+  if (!testEWAHBoolArrayLogical<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testEWAHBoolArrayLogical2<uint32_t>())
+  }
+  if (!testEWAHBoolArrayLogical<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testEWAHBoolArrayLogical2<uint64_t>())
+  }
+  if (!testEWAHBoolArrayLogical<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!testEWAHBoolArrayAppend<uint16_t>())
+  if (!testEWAHBoolArrayLogical2<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testEWAHBoolArrayAppend<uint32_t>())
+  }
+  if (!testEWAHBoolArrayLogical2<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testEWAHBoolArrayAppend<uint64_t>())
+  }
+  if (!testEWAHBoolArrayLogical2<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
 
-  if (!testJoergBukowski<uint16_t>())
+  if (!testEWAHBoolArrayAppend<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testJoergBukowski<uint32_t>())
+  }
+  if (!testEWAHBoolArrayAppend<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
-  if (!testJoergBukowski<uint64_t>())
+  }
+  if (!testEWAHBoolArrayAppend<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
     ++failures;
+  }
+
+  if (!testJoergBukowski<uint16_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testJoergBukowski<uint32_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
+  if (!testJoergBukowski<uint64_t>()){
+    std::cout << failtext << __LINE__ << std::endl;
+    ++failures;
+  }
 
   tellmeaboutmachine();
   if (failures == 0) {

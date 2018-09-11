@@ -1,5 +1,5 @@
-#Compressed bitset in C++
-[![Build Status](https://travis-ci.org/lemire/EWAHBoolArray.png)](https://travis-ci.org/lemire/EWAHBoolArray)
+# Compressed bitset in C++
+[![Build Status](https://travis-ci.org/lemire/EWAHBoolArray.png)](https://travis-ci.org/lemire/EWAHBoolArray) [![Build Status](https://img.shields.io/appveyor/ci/lemire/EWAHBoolArray.svg)](https://ci.appveyor.com/project/lemire/EWAHBoolArray)
 
 
 
@@ -59,7 +59,7 @@ while using several times less memory.
 
 ## When should you use compressed bitmaps?
 
-An uncompress BitSet can use a lot of memory. For example, if you take a BitSet
+An uncompressed BitSet can use a lot of memory. For example, if you take a BitSet
 and set the bit at position 1,000,000 to true and you have just over 100kB. That's over 100kB
 to store the position of one bit. This is wasteful  even if you do not care about memory:
 suppose that you need to compute the intersection between this BitSet and another one
@@ -115,12 +115,43 @@ It works on x64 processors as well as on 32-bit ARM processors.
 
 Versions 0.5 and above assume that the compiler supports the C++11 standard.
 
-# Usage
+# Usage (Linux and Linux-like systems)
 
     make
     ./unit
     make example
     ./example
+
+# Usage (Visual Studio under Windows)
+
+To build with at least Visual Studio 2017 directly in the IDE:
+- Grab the code from GitHub, e.g., by cloning it using [GitHub Desktop](https://desktop.github.com/).
+- Select the ``Visual C++ tools for CMake`` optional component when installing the C++ Development Workload within Visual Studio.
+- Within Visual Studio use ``File > Open > Folder...`` to open the CRoaring folder.
+- Right click on ``CMakeLists.txt`` in the parent directory within ``Solution Explorer`` and select ``Build`` to build the project.
+- For testing, in the Standard toolbar, drop the ``Select Startup Item...`` menu and choose one of the tests. Run the test by pressing the button to the left of the dropdown.
+
+
+# Quick code sample
+
+```C++
+  #include "ewah.h"
+
+  typedef EWAHBoolArray<uint32_t> bitmap;
+
+  bitmap bitset1 =
+      bitmap::bitmapOf(9, 1, 2, 1000, 1001, 1002, 1003, 1007, 1009, 100000);
+  std::cout << "first bitset : " << bitset1 << std::endl;
+  bitmap bitset2 = bitmap::bitmapOf(5, 1, 3, 1000, 1007, 100000);
+  std::cout << "second bitset : " << bitset2 << std::endl;
+  bitmap bitset3 = bitmap::bitmapOf(3, 10, 11, 12);
+  std::cout << "third  bitset : " << bitset3 << std::endl;
+  bitmap orbitset = bitset1 | bitset2;
+  bitmap andbitset = bitset1 & bitset2;
+  bitmap xorbitset = bitset1 ^ bitset2;
+  bitmap andnotbitset = bitset1 - bitset2;
+```
+
 
 # Example
 
@@ -135,6 +166,8 @@ If you have ``doxygen`` installed, you can type ``make doxygen`` and create a do
 
 Please see
 
+
+* Daniel Lemire, Owen Kaser, Nathan Kurz, Luca Deri, Chris O'Hara, François Saint-Jacques, Gregory Ssi-Yan-Kai, Roaring Bitmaps: Implementation of an Optimized Software Library, Software: Practice and Experience 48 (4), 2018 [arXiv:1709.07821](https://arxiv.org/abs/1709.07821)
 * Daniel Lemire, Owen Kaser, Kamel Aouiche, Sorting improves word-aligned bitmap indexes. Data & Knowledge Engineering 69 (1), pages 3-28, 2010. http://arxiv.org/abs/0901.3751
 * Owen Kaser and Daniel Lemire, Compressed bitmap indexes: beyond unions and intersections, Software: Practice and Experience 46 (2), 2016. http://arxiv.org/abs/1402.4466
 
