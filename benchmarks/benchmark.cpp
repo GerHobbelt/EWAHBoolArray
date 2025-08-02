@@ -196,11 +196,11 @@ class WallClockTimer {
 public:
   struct timeval t1, t2;
   WallClockTimer() : t1(), t2() {
-    gettimeofday(&t1, 0);
+    gettimeofday(&t1, nullptr);
     t2 = t1;
   }
   void reset() {
-    gettimeofday(&t1, 0);
+    gettimeofday(&t1, nullptr);
     t2 = t1;
   }
   int elapsed() {
@@ -208,7 +208,7 @@ public:
            static_cast<int>(t2.tv_usec - t1.tv_usec) / 1000;
   }
   int split() {
-    gettimeofday(&t2, 0);
+    gettimeofday(&t2, nullptr);
     return elapsed();
   }
 };
