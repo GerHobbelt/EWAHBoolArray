@@ -8,6 +8,5 @@ var searchData=
   ['boolarray_5',['BoolArray',['../classewah_1_1_bool_array.html',1,'ewah']]],
   ['bufferedrunninglengthword_6',['BufferedRunningLengthWord',['../classewah_1_1_buffered_running_length_word.html',1,'ewah']]],
   ['bufferedrunninglengthword_3c_20uint32_5ft_20_3e_7',['BufferedRunningLengthWord&lt; uint32_t &gt;',['../classewah_1_1_buffered_running_length_word.html',1,'ewah']]],
-  ['bufferedrunninglengthword_3c_20uword_20_3e_8',['BufferedRunningLengthWord&lt; uword &gt;',['../classewah_1_1_buffered_running_length_word.html',1,'ewah']]],
-  ['buffersize_9',['bufferSize',['../classewah_1_1_e_w_a_h_bool_array.html#a481f8a644db093edc1fbf85f2c07fbf3',1,'ewah::EWAHBoolArray']]]
+  ['buffersize_8',['bufferSize',['../classewah_1_1_e_w_a_h_bool_array.html#a481f8a644db093edc1fbf85f2c07fbf3',1,'ewah::EWAHBoolArray']]]
 ];
